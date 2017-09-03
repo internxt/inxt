@@ -1,0 +1,204 @@
+# A testnet deployment for the crowdsale contracts
+main:
+
+    # Chain we are connected to.
+    # Either "mainnet" or "ropsten".
+    # Affects Etherscan verification process only.
+    chain: rinkeby
+
+    # Do we perform deployed contract source code verification on etherscan.io service.
+    # This is a semi automatic process using a Firefox browser.
+    verify_on_etherscan: yes
+
+    solc:
+
+        # This is the Solidity version tag we verify on EtherScan.
+        # For available versions see
+        # https://kovan.etherscan.io/verifyContract2
+        #
+        # See values in Compiler drop down.
+        # You can also get the local compiler version with:
+        #
+        #     solc --version
+        #
+        # Note that for EtherScan you need to add letter "v" at the front of the version
+        #
+        # Note: You need to have correct optmization settings for the compiler
+        # in populus.json that matches what EtherScan is expecting.
+        #
+        version: v0.4.15+commit.bbb8e64f
+
+        #
+        # We supply these to EtherScan as the solc settings we used to compile the contract.
+        # They must match values in populus.json compilication / backends section.
+        #
+        optimizations:
+            optimizer: true
+            runs: 500
+
+    #
+    # Contracts section defines different smart contracts that
+    # are required to run the ICO.
+    #
+    contracts:
+
+        # Team multisignature wallet.
+        #
+        # Replace with your predeployed multisignature wallet contract address.
+        #
+        # We assume this wallet has been deployed beforehand
+        # using wallet.gnosis.pm service and your team members
+        # have been set as the owners of this wallet.
+        #
+        # For testing purposes, e.g. on Kovan network,
+        # you can use any account on your geth / Parity here.
+        #
+        # Note: As the writing of this wallet.gnosis.pm service
+        # works only with mainnet.
+        #
+        # team_multisig:
+            # contract_name: Wallet
+            # contract_file: GnosisWallet.sol
+            # address: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+        #
+        # Pre-ICO fund collector
+        #
+        # Pre-ICO contract allows high volume investors to place their
+        # Pre-ICO has a minimum buy in defined as volume.
+        # Pre-ICO investments have a preferred pricing (see later).
+        #
+        # Pre-ICO owner (team multisig) can set the ICO contract address
+        # later, it does not have to be availalble at the start of the ICO.
+        # After the ICO contract is set, anyone can trigger the moving of funds
+        # to the ICO contract.
+        #
+        # If the actual ICO does not happen, the investors can claim refund
+        # after freezeEndsAt date.
+        #
+        # preico:
+        #     contract_name: PresaleFundCollector
+        #     contract_file: PresaleFundCollector.sol
+        #     arguments:
+        #         _owner: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+        #         # Set 30 days in the future from the moment of deployment
+        #         _freezeEndsAt: "{{ time() + 30*24*3600 }}"
+        #         _weiMinimumLimit: "{{ to_wei(750, 'ether') }}"
+        #
+        # Token contract
+        #
+        # This contract represents ERC-20 token.
+        # It has transfer lock up functionality to prevent the token to be transferable
+        # until the ICO is over. Furthermore it has dynamic minting supply,
+        # so that the crowdsale contract will create new tokens as investment arrives in.
+        # This way, there is no need for a separate burn stage at the end of the crowdsale,
+        # as we never create the exceeding supply.
+        #
+        #
+        token:
+            contract_name: CrowdsaleToken
+            contract_file: CrowdsaleToken.sol
+            arguments:
+                _name: 'MegaPlod'
+                _symbol: MPLOD
+                _initialSupply: 0
+                _decimals: 8  # Ethereum tokens are standardizing around 18 decimals
+                _mintable: true  # Tokens will be dynamically created over the token sale
+        #
+        # Pricing strategy
+        #
+        # Pricing strategy defines the price of a token in the different stages of the crowdsale.
+        # Here we use milestone based pricing that has a different price for the token every week of the crowdale.
+        #
+        # We also give a preferred price for pre-ICO investors.
+        #
+        #
+        pricing_strategy:
+            contract_name: EthTranchePricing
+            contract_file: EthTranchePricing.sol
+            arguments:
+                _tranches:
+                    # This trance starts instantly.
+                    # How many weis one token costs. 15% bonus tier.
+                    # Price is base_price / 1.1
+                    - 0
+                    - 3030303030302727
+
+                    # This trance starts when we have sold 45k worth of tokens.
+                     # Token price is 10% bonus tokens (base price / 1.05)
+                    - "{{ to_wei('1.5', 'ether') }}"
+                    - 3174603174602857
+
+                    # This is the base price that is effective until the token
+                    # sale ends.
+                    - "{{ to_wei('3', 'ether') }}"
+                    - 3333333333333000
+
+                    # Dummy milestone marker to mark the end
+                    # of the array.
+                    - "{{ to_wei('999999999999999', 'ether') }}"
+                    - 0
+
+        #
+        # Crowdsale
+        #
+        # This is the actual crowdsale contract.
+        # It will accept investments during the crowdsale time period.
+        # For each investments, it asks the pricing contract for the
+        # current price for this particular investor.
+        #
+        #
+        #
+        crowdsale:
+            contract_name: MintedEthCappedCrowdsale
+            contract_file: MintedEthCappedCrowdsale.sol
+            arguments:
+                _token: "{{contracts.token.address}}"
+                _pricingStrategy: "{{contracts.pricing_strategy.address}}"
+                _multisigWallet: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+                _start: "{{ timestamp(datetime(2017, 9, 2, 0, 0)) }}"
+                _end: "{{ timestamp(datetime(2017, 9, 3, 0, 0)) }}"
+                _minimumFundingGoal: 100000000000000000
+                _weiCap: 10000000000000000000
+        #
+        # Finalize contract
+        #
+        # Finalize contract defines what happens at the end of the successful crowdsale.
+        #
+        # The bonus finalize agent we define here 1) makes tokens transferable by releasing
+        # the transfer restrictions 2) mints 25% new tokens for the team to be
+        # reserved for founders, bounties and such. These new tokens are deposited in the
+        # team multisig wallet.
+        #
+        finalize_agent:
+            contract_name: BonusFinalizeAgent
+            contract_file: BonusFinalizeAgent.sol
+            arguments:
+                _token: "{{contracts.token.address}}"
+                _crowdsale: "{{contracts.crowdsale.address}}"
+                _bonusBasePoints: 750
+                _teamMultisig: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+
+    # Post-deployment actions connect contracts together.
+    # They set ownership and allowed actions, so that contracts can interact
+    post_actions: |
+        # Enable new token minting by a crowdsale contract
+        token.transact({"from": deploy_address}).setMintAgent(crowdsale.address, True)
+
+        # Set actions what happen at the end of the crodsale.
+        # Enable token mintint at the end of the crowdsale to create bonus pool, founder pool and such
+        token.transact({"from": deploy_address}).setMintAgent(finalize_agent.address, True)
+        crowdsale.transact({"from": deploy_address}).setFinalizeAgent(finalize_agent.address)
+        token.transact({"from": deploy_address}).setReleaseAgent(finalize_agent.address)
+
+        # Set the team multisig address as the upgraade master for the token
+        token.transact({"from": deploy_address}).transferOwnership("0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3")
+
+    # Make sure that everything we have deployed all contracts in good state
+    # and their internal state is sane
+    verify_actions: |
+        # assert token.call().owner() == team_multisig.address
+        # assert crowdsale.call().owner() == team_multisig.address
+        # assert preico.call().owner() == team_multisig.address
+        # assert finalize_agent.call().teamMultisig() == team_multisig.address
+        assert finalize_agent.call().isSane()
+        # assert crowdsale.call().getState() == CrowdsaleState.Funding
