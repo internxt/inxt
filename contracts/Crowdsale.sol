@@ -59,9 +59,6 @@ contract Crowdsale is Haltable {
   /* How many wei of funding we have raised */
   uint public weiRaised = 0;
 
-  /* Calculate incoming funds from presale contracts and addresses */
-  uint public presaleWeiRaised = 0;
-
   /* How many distinct addresses have invested */
   uint public investorCount = 0;
 
@@ -92,9 +89,6 @@ contract Crowdsale is Haltable {
   /** How much tokens this crowdsale has credited for each investor address */
   mapping (address => uint256) public tokenAmountOf;
 
-  /** Addresses that are allowed to invest even before ICO offical opens. For testing, for ICO partners, etc. */
-  mapping (address => bool) public earlyParticipantWhitelist;
-
   /** This is for manul testing for the interaction from owner wallet. You can set it to any value and inspect this in blockchain explorer to see that crowdsale interaction works. */
   uint public ownerTestValue;
 
@@ -118,9 +112,6 @@ contract Crowdsale is Haltable {
 
   // The rules were changed what kind of investments we accept
   event InvestmentPolicyChanged(bool newRequireCustomerId, bool newRequiredSignedAddress, address newSignerAddress);
-
-  // Address early participation whitelist status changed
-  event Whitelisted(address addr, bool status);
 
   // Crowdsale end time has been changed
   event EndsAtChanged(uint newEndsAt);
@@ -183,12 +174,7 @@ contract Crowdsale is Haltable {
   function investInternal(address receiver, uint128 customerId) stopInEmergency private {
 
     // Determine if it's a good time to accept investment from this participant
-    if(getState() == State.PreFunding) {
-      // Are we whitelisted for early deposit
-      if(!earlyParticipantWhitelist[receiver]) {
-        throw;
-      }
-    } else if(getState() == State.Funding) {
+    if(getState() == State.Funding) {
       // Retail participants can only come in when the crowdsale is running
       // pass
     } else {
@@ -199,7 +185,7 @@ contract Crowdsale is Haltable {
     uint weiAmount = msg.value;
 
     // Account presale sales separately, so that they do not count against pricing tranches
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised - presaleWeiRaised, tokensSold, msg.sender, token.decimals());
+    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, msg.sender, token.decimals());
 
     if(tokenAmount == 0) {
       // Dust transaction
@@ -218,10 +204,6 @@ contract Crowdsale is Haltable {
     // Update totals
     weiRaised = weiRaised.plus(weiAmount);
     tokensSold = tokensSold.plus(tokenAmount);
-
-    if(pricingStrategy.isPresalePurchase(receiver)) {
-        presaleWeiRaised = presaleWeiRaised.plus(weiAmount);
-    }
 
     // Check that we did not bust the cap
     if(isBreakingCap(weiAmount, tokenAmount, weiRaised, tokensSold)) {
@@ -375,16 +357,6 @@ contract Crowdsale is Haltable {
     requiredSignedAddress = value;
     signerAddress = _signerAddress;
     InvestmentPolicyChanged(requireCustomerId, requiredSignedAddress, signerAddress);
-  }
-
-  /**
-   * Allow addresses to do early participation.
-   *
-   * TODO: Fix spelling error in the name
-   */
-  function setEarlyParicipantWhitelist(address addr, bool status) onlyOwner {
-    earlyParticipantWhitelist[addr] = status;
-    Whitelisted(addr, status);
   }
 
   /**

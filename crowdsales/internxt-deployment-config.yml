@@ -41,49 +41,6 @@ main:
     # are required to run the ICO.
     #
     contracts:
-
-        # Team multisignature wallet.
-        #
-        # Replace with your predeployed multisignature wallet contract address.
-        #
-        # We assume this wallet has been deployed beforehand
-        # using wallet.gnosis.pm service and your team members
-        # have been set as the owners of this wallet.
-        #
-        # For testing purposes, e.g. on Kovan network,
-        # you can use any account on your geth / Parity here.
-        #
-        # Note: As the writing of this wallet.gnosis.pm service
-        # works only with mainnet.
-        #
-        # team_multisig:
-            # contract_name: Wallet
-            # contract_file: GnosisWallet.sol
-            # address: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
-        #
-        # Pre-ICO fund collector
-        #
-        # Pre-ICO contract allows high volume investors to place their
-        # Pre-ICO has a minimum buy in defined as volume.
-        # Pre-ICO investments have a preferred pricing (see later).
-        #
-        # Pre-ICO owner (team multisig) can set the ICO contract address
-        # later, it does not have to be availalble at the start of the ICO.
-        # After the ICO contract is set, anyone can trigger the moving of funds
-        # to the ICO contract.
-        #
-        # If the actual ICO does not happen, the investors can claim refund
-        # after freezeEndsAt date.
-        #
-        # preico:
-        #     contract_name: PresaleFundCollector
-        #     contract_file: PresaleFundCollector.sol
-        #     arguments:
-        #         _owner: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
-        #         # Set 30 days in the future from the moment of deployment
-        #         _freezeEndsAt: "{{ time() + 30*24*3600 }}"
-        #         _weiMinimumLimit: "{{ to_wei(750, 'ether') }}"
-        #
         # Token contract
         #
         # This contract represents ERC-20 token.
@@ -110,6 +67,8 @@ main:
         # Here we use milestone based pricing that has a different price for the token every week of the crowdale.
         #
         # We also give a preferred price for pre-ICO investors.
+        #
+        # Prices are calculatet to be according to the bonus rules defined in the whitepaper
         #
         #
         pricing_strategy:
@@ -155,8 +114,8 @@ main:
                 _token: "{{contracts.token.address}}"
                 _pricingStrategy: "{{contracts.pricing_strategy.address}}"
                 _multisigWallet: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
-                _start: "{{ timestamp(datetime(2017, 9, 2, 0, 0)) }}"
-                _end: "{{ timestamp(datetime(2017, 9, 3, 0, 0)) }}"
+                _start: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) }}"
+                _end: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) + 13*3600 + 1800 }}"
                 _minimumFundingGoal: 100000000000000000
                 _weiCap: 10000000000000000000
         #
@@ -200,5 +159,5 @@ main:
         # assert crowdsale.call().owner() == team_multisig.address
         # assert preico.call().owner() == team_multisig.address
         # assert finalize_agent.call().teamMultisig() == team_multisig.address
-        assert finalize_agent.call().isSane()
+        # assert finalize_agent.call().isSane()
         # assert crowdsale.call().getState() == CrowdsaleState.Funding
