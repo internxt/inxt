@@ -66,7 +66,7 @@ contract BonusFinalizeAgent is FinalizeAgent {
 
     // move tokens to the team multisig wallet
     //additional 770 000 tokens are generated for the bounty bonus campaign
-    token.mint(teamMultisig, allocatedBonus + 770000);
+    token.mint(teamMultisig, allocatedBonus + 77000000000000);
 
     // Make token transferable
     token.releaseTokenTransfer();

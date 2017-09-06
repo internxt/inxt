@@ -4,7 +4,7 @@ main:
     # Chain we are connected to.
     # Either "mainnet" or "ropsten".
     # Affects Etherscan verification process only.
-    chain: rinkeby
+    chain: mainnet
 
     # Do we perform deployed contract source code verification on etherscan.io service.
     # This is a semi automatic process using a Firefox browser.
@@ -55,8 +55,8 @@ main:
             contract_name: CrowdsaleToken
             contract_file: CrowdsaleToken.sol
             arguments:
-                _name: 'MegaPlod'
-                _symbol: MPLOD
+                _name: 'Internxt token'
+                _symbol: INXT
                 _initialSupply: 0
                 _decimals: 8  # Ethereum tokens are standardizing around 18 decimals
                 _mintable: true  # Tokens will be dynamically created over the token sale
@@ -113,11 +113,13 @@ main:
             arguments:
                 _token: "{{contracts.token.address}}"
                 _pricingStrategy: "{{contracts.pricing_strategy.address}}"
-                _multisigWallet: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+                _multisigWallet: "0x4AA88c4fd5CDAAfaDF1fA6bf4dff286ED826f769"
                 _start: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) }}"
                 _end: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) + 13*3600 + 1800 }}"
-                _minimumFundingGoal: 100000000000000000
-                _weiCap: 10000000000000000000
+                #500 ETH converted to wei
+                _minimumFundingGoal: 500000000000000000000
+                #150 000 ETH converted to wei
+                _weiCap: 150000000000000000000000
         #
         # Finalize contract
         #
@@ -135,7 +137,7 @@ main:
                 _token: "{{contracts.token.address}}"
                 _crowdsale: "{{contracts.crowdsale.address}}"
                 _bonusBasePoints: 750
-                _teamMultisig: "0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3"
+                _teamMultisig: "0x4AA88c4fd5CDAAfaDF1fA6bf4dff286ED826f769"
 
     # Post-deployment actions connect contracts together.
     # They set ownership and allowed actions, so that contracts can interact
@@ -150,7 +152,7 @@ main:
         token.transact({"from": deploy_address}).setReleaseAgent(finalize_agent.address)
 
         # Set the team multisig address as the upgraade master for the token
-        token.transact({"from": deploy_address}).transferOwnership("0x7357Fdb8420a4066305AB9a586A3C86a3eDf22B3")
+        token.transact({"from": deploy_address}).transferOwnership("0x4AA88c4fd5CDAAfaDF1fA6bf4dff286ED826f769")
 
     # Make sure that everything we have deployed all contracts in good state
     # and their internal state is sane
