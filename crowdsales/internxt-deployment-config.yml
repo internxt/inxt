@@ -55,7 +55,7 @@ main:
             contract_name: CrowdsaleToken
             contract_file: CrowdsaleToken.sol
             arguments:
-                _name: 'Internxt token'
+                _name: 'Internxt'
                 _symbol: INXT
                 _initialSupply: 0
                 _decimals: 8  # Ethereum tokens are standardizing around 18 decimals
@@ -84,12 +84,12 @@ main:
 
                     # This trance starts when we have sold 45k worth of tokens.
                      # Token price is 10% bonus tokens (base price / 1.05)
-                    - "{{ to_wei('1.5', 'ether') }}"
+                    - "{{ to_wei('22500', 'ether') }}"
                     - 3174603174602857
 
                     # This is the base price that is effective until the token
                     # sale ends.
-                    - "{{ to_wei('3', 'ether') }}"
+                    - "{{ to_wei('45000', 'ether') }}"
                     - 3333333333333000
 
                     # Dummy milestone marker to mark the end
@@ -114,8 +114,8 @@ main:
                 _token: "{{contracts.token.address}}"
                 _pricingStrategy: "{{contracts.pricing_strategy.address}}"
                 _multisigWallet: "0x4AA88c4fd5CDAAfaDF1fA6bf4dff286ED826f769"
-                _start: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) }}"
-                _end: "{{ timestamp(datetime(2017, 9, 4, 0, 0)) + 13*3600 + 1800 }}"
+                _start: "{{ timestamp(datetime(2017, 9, 7, 0, 0)) }}"
+                _end: "{{ timestamp(datetime(2017, 9, 28, 0, 0)) + 19 * 3600 }}"
                 #500 ETH converted to wei
                 _minimumFundingGoal: 500000000000000000000
                 #150 000 ETH converted to wei
