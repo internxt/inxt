@@ -23,4 +23,4 @@ The rate of conversion is 1 ETH:300 INXT tokens.
 During the first 15% of tokens created(first 22500 ETH collected), users will get 10% bonus tokens on their purchase, and additional 5%(total of 15%), for purchases over 100 ETH.
 During the second 15% of tokens, users get 5% bonus, and additional 5% if they get over 100 ETH worth of tokens.
 
-All other relative details about team, token, and crodwsale can be found at our website, at internxt.io
+All other relative details about team, token, and crowdsale can be found at our website, at internxt.io
