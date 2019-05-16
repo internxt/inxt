@@ -11,7 +11,7 @@ ethereum==1.6.1
 ethereum-abi-utils==0.4.0
 ethereum-utils==0.3.2
 idna==2.5
-Jinja2==2.9.6
+Jinja2>=2.10.1
 json-rpc==1.10.3
 jsonschema==2.6.0
 MarkupSafe==1.0
