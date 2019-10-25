@@ -40,4 +40,4 @@ toposort==1.5
 urllib3>=1.23
 watchdog==0.8.3
 web3==3.11.1
-Werkzeug==0.12.2
+Werkzeug==0.15.3
